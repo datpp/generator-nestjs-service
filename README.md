@@ -38,8 +38,8 @@ yo nestjs-service:module [module-name]      # require run from root nestjs proje
 
 ## Getting to Know Project Structure
 
- * This generator has 4 kinds (for first release I just have enough time to support 1) of project structure and 3 kinds of module structure.
- * In each structure you will found the README.md describe detail of structure.
+ * This generator has 4 kinds (for first release I just support the standalone one, the others will come later) of project structure and 3 kinds of module structure.
+ * In each structure, you will found the README.md which describes the structure detail.
  
 ## Check List
 ### Project structure supports
@@ -50,13 +50,13 @@ yo nestjs-service:module [module-name]      # require run from root nestjs proje
 
 ### Module structure support
 #### Clean Architect - TBD
-#### Basic
+#### Basic - Minimal
 - [x] default controller
 - [x] default dto request/response/response with paging
 - [x] default service
 - [x] default entity (with TypeORM)
 - [x] default schema (with Mongoose)
-#### Basic Full
+#### Basic - Full
 - [x] default controller
 - [x] default dto request/response/response with paging
 - [x] default service

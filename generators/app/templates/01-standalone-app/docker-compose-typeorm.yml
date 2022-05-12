@@ -1,0 +1,18 @@
+version: '3.1'
+
+services:
+  database:
+    image: mysql:latest
+    environment:
+      - MYSQL_DATABASE=<%= name %>
+      - MYSQL_USER=<%= name %>user
+      - MYSQL_PASSWORD=<%= name %>password
+    ports:
+      - 33061:3306
+    restart: always
+<% if (useCacheRedis) { %>
+  redis:
+    image: redis:latest
+    ports:
+      - 63791:6379
+<% } %>

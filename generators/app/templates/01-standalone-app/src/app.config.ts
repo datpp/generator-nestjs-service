@@ -5,20 +5,30 @@ export default () => ({
     ttl: process.env.CACHE_TTL || 3600,
   },
   database: {
-    <% if (useMongoose) { %>
+<% if (useMongoose) { %>
     uri: process.env.DB_URI || `mongodb://<%= appName %>user:<%= appName %>password@localhost:27017/`,
-    <% } %>
-    <% if (useTypeORM) { %>
+<% } %>
+<% if (useTypeORM) { %>
     type: 'mysql',
-    url: process.env.DB_URI || `mysql://<%= appName %>user:<%= appName %>password@localhost:33061/<%= appName %>`,
+    url: process.env.DB_URI || `mysql://<%= appName %>user:<%= appName %>password@localhost:33061/<%= appName %>`, // default port is 33061 - check expose port for host in docker-compose.yml
     entities: ['./dist/**/*.entity{.ts,.js}'],
     synchronize: false,
-    <% } %>
+<% } %>
   },
-  <% if (useCacheRedis) { %>
+<% if (useCacheRedis) { %>
   redis: {
     host: process.env.REDIS_HOST || 'localhost',
-    port: process.env.REDIS_PORT || 63791, // default port is 33061 - check expose port for host in docker-compose.yml
+    port: process.env.REDIS_PORT || 63791, // default port is 63791 - check expose port for host in docker-compose.yml
   },
-  <% } %>
+<% } %>
+<% if (usePubSub) { %>
+  // export GOOGLE_APPLICATION_CREDENTIALS="/path/to/service-account-file.json"
+  // you need to run above command to add authorize for request to gcp
+  // for more document you can found at https://www.npmjs.com/package/nestjs-google-pubsub
+  gcp: {
+    pubsub: {
+      projectId: '<%= GCPProjectId %>',
+    }
+  }
+<% } %>
 });

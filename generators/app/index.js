@@ -100,6 +100,14 @@ module.exports = class extends Generator {
       });
     }
     const answerProjectLib = await this.prompt(questionProjectLib);
+    if (answerProjectLib.usePubSub.toLowerCase() === 'y') {
+      const anwserGCPInfo = await this.prompt([{
+        type: "input",
+        name: "ProjectId",
+        message: "Enter your GCP projectId:"
+      }]);
+      answerProjectInfo.GCPProjectId = anwserGCPInfo.ProjectId;
+    }
 
     this.props = {
       answerProjectType,
@@ -151,9 +159,27 @@ module.exports = class extends Generator {
        }
       );
     }
+    else {
+      this.fs.copyTpl(
+       this.templatePath(`${this.props.answerProjectType.projectType}/docker-compose-none.yml`),
+       this.destinationPath(`${this.props.answerProjectInfo.name}/docker-compose.yml`),
+       {
+         name: this.props.answerProjectInfo.name,
+         description: this.props.answerProjectInfo.description,
+         author: this.props.answerProjectInfo.author,
+         useCacheRedis: this.props.answerProjectLib.useCacheRedis.toLowerCase() === 'y',
+       }
+      );
+    }
 
-    if (this.props.answerProjectType.projectType === '02-microservice' || this.props.answerProjectLib.usePubSub.toLocaleString() === 'y') {
-      pkgJson.dependencies['nestjs-google-pubsub'] = '^0.1.2';
+    if (this.props.answerProjectLib.usePubSub.toLowerCase() === 'y') {
+      pkgJson.dependencies['@nestjs/microservices'] = '^8.4.4';
+      pkgJson.dependencies['@algoan/pubsub'] = '^4.6.3';
+      pkgJson.dependencies['@algoan/nestjs-google-pubsub-client'] = '^0.4.1';
+
+      if (this.props.answerProjectType.projectType === '02-microservice') {
+        pkgJson.dependencies['@algoan/nestjs-google-pubsub-microservice'] = '^3.0.2';
+      }
     }
 
     if (this.props.answerProjectType.projectType === '04-clean-architect') {
@@ -250,6 +276,7 @@ module.exports = class extends Generator {
        useMongoose: this.props.answerProjectLib.dbType === 'mongoose',
        useCacheRedis: this.props.answerProjectLib.useCacheRedis.toLowerCase() === 'y',
        usePubSub: this.props.answerProjectLib.usePubSub.toLowerCase() === 'y',
+       GCPProjectId: this.props.answerProjectInfo.GCPProjectId || '',
        appName: this.props.answerProjectInfo.name,
        appDescription: this.props.answerProjectInfo.description,
        appPort: this.props.answerProjectInfo.appPort,

@@ -1,7 +1,8 @@
 import {
+  Inject,
   MiddlewareConsumer,
   Module,
-  NestModule,
+  NestModule, OnApplicationBootstrap,
 } from '@nestjs/common';
 import configuration from './app.config';
 import { AppController } from './app.controller';
@@ -18,6 +19,10 @@ import { TypeOrmModule } from '@nestjs/typeorm';
 <% if (useMongoose) { %>
 import { MongooseModule } from "@nestjs/mongoose";
 <% } %>
+<% if (usePubSub) { %>
+import { ClientsModule, ClientProxy } from '@nestjs/microservices';
+import { GCPubSubClient } from '@algoan/nestjs-google-pubsub-client';
+<% } %>
 
 @Module({
   imports: [
@@ -25,7 +30,7 @@ import { MongooseModule } from "@nestjs/mongoose";
       isGlobal: true,
       load: [configuration],
     }),
-    <% if (useCacheRedis) { %>
+<% if (useCacheRedis) { %>
     CacheModule.registerAsync({
       isGlobal: true,
       useFactory: async (config: ConfigService) => ({
@@ -37,23 +42,44 @@ import { MongooseModule } from "@nestjs/mongoose";
       inject: [ConfigService],
     }),
     <% } %>
-    <% if (useTypeORM) { %>
+<% if (useTypeORM) { %>
     TypeOrmModule.forRootAsync({
       useFactory: async (config: ConfigService) => config.get(`database`),
       inject: [ConfigService],
     }),
-    <% } %>
-    <% if (useMongoose) { %>
+<% } %>
+<% if (useMongoose) { %>
     MongooseModule.forRootAsync({
       useFactory: async (config: ConfigService) => config.get(`database`),
       inject: [ConfigService],
     }),
-    <% } %>
+<% } %>
+<% if (usePubSub) { %>
+    ClientsModule.registerAsync([
+      {
+        name: 'PUBSUB_CLIENT',
+        imports: [ConfigModule],
+        useFactory: async (config: ConfigService) => ({
+          customClass: GCPubSubClient,
+          options: config.get('gcp.pubsub'),
+        }),
+        inject: [ConfigService],
+      },
+    ]),
+<% } %>
   ],
   controllers: [AppController],
   providers: [AppService],
 })
-export class AppModule implements NestModule {
+export class AppModule implements NestModule, OnApplicationBootstrap {
+<% if (usePubSub) { %>
+  constructor(@Inject('PUBSUB_CLIENT') private readonly client: ClientProxy) {}
+
+  async onApplicationBootstrap() {
+    await this.client.connect();
+  }
+<% } %>
+
   configure(consumer: MiddlewareConsumer): void {
     consumer.apply(AppLoggerMiddleware).forRoutes('*');
   }

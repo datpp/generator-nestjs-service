@@ -5,7 +5,7 @@
 [circleci-image]: https://img.shields.io/circleci/build/github/nestjs/nest/master?token=abc123def456
 [circleci-url]: https://circleci.com/gh/nestjs/nest
 
-  <p>Generate from <a href="https://github.com/datpp/generator-nestjs-service.git">Yeoman Nestjs Generator</a></p>
+  <p>Generated from <a href="https://github.com/datpp/generator-nestjs-service.git">Yeoman Nestjs Generator</a></p>
   <p align="center">A progressive <a href="http://nodejs.org" target="_blank">Node.js</a> framework for building efficient and scalable server-side applications.</p>
     <p align="center">
 <a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/v/@nestjs/core.svg" alt="NPM Version" /></a>

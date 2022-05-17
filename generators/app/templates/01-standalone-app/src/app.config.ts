@@ -24,7 +24,7 @@ export default () => ({
 <% if (usePubSub) { %>
   // export GOOGLE_APPLICATION_CREDENTIALS="/path/to/service-account-file.json"
   // you need to run above command to add authorize for request to gcp
-  // for more document you can found at https://www.npmjs.com/package/nestjs-google-pubsub
+  // for more document you can found at https://docs.nestjs.com/microservices/basics#client
   gcp: {
     pubsub: {
       projectId: '<%= GCPProjectId %>',

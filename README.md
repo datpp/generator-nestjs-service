@@ -68,5 +68,9 @@ yo nestjs-service:module [module-name]      # require run from root nestjs proje
 - [x] default interceptor
 - [x] default middleware
 - [x] default pipe
+
+## Change Log 
+- https://github.com/datpp/generator-nestjs-service/blob/main/CHANGELOG.md
+
 ## License
 MIT - https://opensource.org/licenses/MIT

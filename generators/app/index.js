@@ -4,6 +4,7 @@ const chalk = require("chalk");
 const yosay = require("yosay");
 const dbTypes = require("./db-types");
 const projectTypes = require("./project-types");
+const messageBroker = require("./message-broker");
 const _ = require('lodash');
 
 _.extend(Generator.prototype, require('yeoman-generator/lib/actions/install'));
@@ -65,17 +66,29 @@ module.exports = class extends Generator {
       }
     ];
 
-    if (answerProjectType.projectType !== '02-microservice') {
+    let msgPort = "What port would you like your app to use for local development?";
+    if (answerProjectType.projectType === '02-microservice') {
+      msgPort = "What port would you like your app to use for local development (using to access Technical Document)?";
+    }
+
+    questionsProjectInfo.push({
+      type: "input",
+      name: "appPort",
+      message: msgPort,
+      default: "3000"
+    });
+
+    if (answerProjectType.projectType === '02-microservice' || answerProjectType.projectType === '03-hybrid-app') {
       questionsProjectInfo.push({
-        type: "input",
-        name: "appPort",
-        message: "What port would you like your app to use for local development?",
-        default: "3000"
+        type: 'list',
+        name: 'messageBroker',
+        message: 'Message broker using for your service?',
+        choices: messageBroker
       });
     }
 
     const answerProjectInfo = await this.prompt(questionsProjectInfo);
-    answerProjectInfo.name = answerProjectInfo.name.replace(/\s+/g, '').toLowerCase();
+    answerProjectInfo.name = answerProjectInfo.name.replace(/\s+/g, '-').toLowerCase();
 
     const questionProjectLib = [
       {
@@ -100,6 +113,10 @@ module.exports = class extends Generator {
       });
     }
     const answerProjectLib = await this.prompt(questionProjectLib);
+    if (!answerProjectLib.usePubSub) {
+      answerProjectLib.usePubSub = 'N';
+    }
+
     if (answerProjectLib.usePubSub.toLowerCase() === 'y') {
       const anwserGCPInfo = await this.prompt([{
         type: "input",
@@ -108,6 +125,7 @@ module.exports = class extends Generator {
       }]);
       answerProjectInfo.GCPProjectId = anwserGCPInfo.ProjectId;
     }
+
 
     this.props = {
       answerProjectType,
@@ -121,11 +139,31 @@ module.exports = class extends Generator {
       devDependencies: {},
       dependencies: {}
     };
+    const globalConfig = {
+      name: this.props.answerProjectInfo.name,
+      description: this.props.answerProjectInfo.description,
+      author: this.props.answerProjectInfo.author,
+      useCacheRedis: this.props.answerProjectLib.useCacheRedis.toLowerCase() === 'y',
+      useKafka: this.props.answerProjectInfo.messageBroker && this.props.answerProjectInfo.messageBroker.toLowerCase() === 'kafka',
+      useRabbitmq: this.props.answerProjectInfo.messageBroker && this.props.answerProjectInfo.messageBroker.toLowerCase() === 'rabbitmq',
+      useTypeORM: this.props.answerProjectLib.dbType === 'typeorm',
+      useMongoose: this.props.answerProjectLib.dbType === 'mongoose',
+      usePubSub: this.props.answerProjectLib.usePubSub.toLowerCase() === 'y',
+      appName: this.props.answerProjectInfo.name,
+      appDescription: this.props.answerProjectInfo.description,
+      GCPProjectId: this.props.answerProjectInfo.GCPProjectId || '',
+      appPort: this.props.answerProjectInfo.appPort,
+    };
 
-    if (this.props.answerProjectLib.useCacheRedis) {
+    if (globalConfig.useCacheRedis) {
       pkgJson.dependencies['cache-manager'] = '^3.6.0';
       pkgJson.dependencies['cache-manager-redis-store'] = '^2.0.0';
       pkgJson.devDependencies['@types/cache-manager'] = '^3.4.3';
+    }
+
+    if (globalConfig.useKafka) {
+      pkgJson.dependencies['@nestjs/microservices'] = '^8.4.4';
+      pkgJson.dependencies['kafkajs'] = '^2.0.0';
     }
 
     if (this.props.answerProjectLib.dbType === 'mongoose') {
@@ -135,12 +173,7 @@ module.exports = class extends Generator {
       this.fs.copyTpl(
        this.templatePath(`${this.props.answerProjectType.projectType}/docker-compose-mongoose.yml`),
        this.destinationPath(`${this.props.answerProjectInfo.name}/docker-compose.yml`),
-       {
-         name: this.props.answerProjectInfo.name,
-         description: this.props.answerProjectInfo.description,
-         author: this.props.answerProjectInfo.author,
-         useCacheRedis: this.props.answerProjectLib.useCacheRedis.toLowerCase() === 'y',
-       }
+       globalConfig
       );
     }
     else if (this.props.answerProjectLib.dbType === 'typeorm') {
@@ -151,24 +184,14 @@ module.exports = class extends Generator {
       this.fs.copyTpl(
        this.templatePath(`${this.props.answerProjectType.projectType}/docker-compose-typeorm.yml`),
        this.destinationPath(`${this.props.answerProjectInfo.name}/docker-compose.yml`),
-       {
-         name: this.props.answerProjectInfo.name,
-         description: this.props.answerProjectInfo.description,
-         author: this.props.answerProjectInfo.author,
-         useCacheRedis: this.props.answerProjectLib.useCacheRedis.toLowerCase() === 'y',
-       }
+       globalConfig
       );
     }
     else {
       this.fs.copyTpl(
        this.templatePath(`${this.props.answerProjectType.projectType}/docker-compose-none.yml`),
        this.destinationPath(`${this.props.answerProjectInfo.name}/docker-compose.yml`),
-       {
-         name: this.props.answerProjectInfo.name,
-         description: this.props.answerProjectInfo.description,
-         author: this.props.answerProjectInfo.author,
-         useCacheRedis: this.props.answerProjectLib.useCacheRedis.toLowerCase() === 'y',
-       }
+       globalConfig
       );
     }
 
@@ -199,23 +222,14 @@ module.exports = class extends Generator {
     this.fs.copyTpl(
      this.templatePath(`${this.props.answerProjectType.projectType}/src/main.ts`),
      this.destinationPath(`${this.props.answerProjectInfo.name}/src/main.ts`),
-     {
-       useTypeORM: this.props.answerProjectLib.dbType === 'typeorm',
-       useMongoose: this.props.answerProjectLib.dbType === 'mongoose',
-       useCacheRedis: this.props.answerProjectLib.useCacheRedis.toLowerCase() === 'y',
-       usePubSub: this.props.answerProjectLib.usePubSub.toLowerCase() === 'y',
-       appName: this.props.answerProjectInfo.name,
-       appDescription: this.props.answerProjectInfo.description,
-     }
+     globalConfig
     );
 
     // Copy test files
     this.fs.copyTpl(
      this.templatePath(`${this.props.answerProjectType.projectType}/test/**/*`),
      this.destinationPath(`${this.props.answerProjectInfo.name}/test`),
-     {
-       appName: this.props.answerProjectInfo.name,
-     }
+     globalConfig
     );
 
     // Copy config files
@@ -242,19 +256,16 @@ module.exports = class extends Generator {
      this.destinationPath(`${this.props.answerProjectInfo.name}/nest-cli.json`)
     );
 
-    this.fs.copy(
+    this.fs.copyTpl(
      this.templatePath(`${this.props.answerProjectType.projectType}/README.md`),
-     this.destinationPath(`${this.props.answerProjectInfo.name}/README.md`)
+     this.destinationPath(`${this.props.answerProjectInfo.name}/README.md`),
+     globalConfig
     );
 
     this.fs.copyTpl(
      this.templatePath(`${this.props.answerProjectType.projectType}/package.json`),
      this.destinationPath(`${this.props.answerProjectInfo.name}/package.json`),
-     {
-       name: this.props.answerProjectInfo.name,
-       description: this.props.answerProjectInfo.description,
-       author: this.props.answerProjectInfo.author
-     }
+     globalConfig
     );
 
     this.fs.copy(
@@ -271,16 +282,7 @@ module.exports = class extends Generator {
     this.fs.copyTpl(
      this.templatePath(`${this.props.answerProjectType.projectType}/src/app.*`),
      this.destinationPath(`${this.props.answerProjectInfo.name}/src`),
-     {
-       useTypeORM: this.props.answerProjectLib.dbType === 'typeorm',
-       useMongoose: this.props.answerProjectLib.dbType === 'mongoose',
-       useCacheRedis: this.props.answerProjectLib.useCacheRedis.toLowerCase() === 'y',
-       usePubSub: this.props.answerProjectLib.usePubSub.toLowerCase() === 'y',
-       GCPProjectId: this.props.answerProjectInfo.GCPProjectId || '',
-       appName: this.props.answerProjectInfo.name,
-       appDescription: this.props.answerProjectInfo.description,
-       appPort: this.props.answerProjectInfo.appPort,
-     }
+     globalConfig
     );
 
     // for common module, generate folder structure

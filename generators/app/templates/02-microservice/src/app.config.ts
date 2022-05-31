@@ -1,4 +1,5 @@
 export default () => ({
+  environment: process.env.ENV || 'DEV',
   port: parseInt(process.env.APP_PORT, 10) || <%= appPort %>,
   cache: {
     ttl: process.env.CACHE_TTL || 3600,
@@ -24,11 +25,21 @@ export default () => ({
   // see more at https://docs.nestjs.com/microservices/kafka#options
   kafkaOptions: {
     client: {
-      clientId: '<%= appName %>',
-      brokers: ['localhost:9092'],
+      clientId: process.env.KAFKA_CLIENT_ID || '<%= appName %>',
+      brokers: process.env.KAFKA_BROKERS && process.env.KAFKA_BROKERS.split(',') || ['localhost:9092'],
     },
     consumer: {
-      groupId: '<%= appName %>-consumer'
+      groupId: process.env.KAFKA_GROUP_ID || '<%= appName %>-consumer'
+    },
+  },
+<% } %>
+<% if (useRabbitmq) { %>
+  // see more at https://docs.nestjs.com/microservices/rabbitmq#options
+  rabbitmqOptions: {
+    urls: process.env.RABBITMQ_URI && process.env.RABBITMQ_URI.split(',') || [`amqp://localhost:5672`],
+    queue: process.env.RABBITMQ_QUEUE_NAME || '<%= appName %>',
+    queueOptions: {
+      // durable: false
     },
   },
 <% } %>
@@ -38,7 +49,7 @@ export default () => ({
   // for more document you can found at https://docs.nestjs.com/microservices/basics#client
   gcp: {
     pubsub: {
-      projectId: '<%= GCPProjectId %>',
+      projectId: process.env.GCP_PROJECT_ID || '<%= GCPProjectId %>',
     }
   }
 <% } %>

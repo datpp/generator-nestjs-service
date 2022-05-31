@@ -29,6 +29,17 @@ import { MongooseModule } from "@nestjs/mongoose";
 <% } %>
 <% if (usePubSub || useKafka || useRabbitmq) { %>
 import { ClientsModule, Transport, ClientProxy } from '@nestjs/microservices';
+import {
+<% if (usePubSub) { %>
+  PUBSUB_SERVICE,
+  <% } %>
+<% if (useKafka) { %>
+  KAFKA_SERVICE,
+  <% } %>
+<% if (useRabbitmq) { %>
+  RABBITMQ_SERVICE,
+<% } %>
+} from './common/constants';
 <% } %>
 <% if (usePubSub) { %>
 import { GCPubSubClient } from '@algoan/nestjs-google-pubsub-client';
@@ -68,7 +79,7 @@ import { GCPubSubClient } from '@algoan/nestjs-google-pubsub-client';
     ClientsModule.registerAsync([
 <% if (usePubSub) { %>
       {
-        name: 'PUBSUB_SERVICE',
+        name: PUBSUB_SERVICE,
         imports: [ConfigModule],
         useFactory: async (config: ConfigService) => ({
           customClass: GCPubSubClient,
@@ -79,11 +90,22 @@ import { GCPubSubClient } from '@algoan/nestjs-google-pubsub-client';
 <% } %>
 <% if (useKafka) { %>
       {
-        name: 'KAFKA_SERVICE',
+        name: KAFKA_SERVICE,
         imports: [ConfigModule],
         useFactory: async (config: ConfigService) => ({
           transport: Transport.KAFKA,
           options: config.get('kafkaOptions')
+        }),
+        inject: [ConfigService],
+      },
+<% } %>
+<% if (useRabbitmq) { %>
+      {
+        name: RABBITMQ_SERVICE,
+        imports: [ConfigModule],
+        useFactory: async (config: ConfigService) => ({
+          transport: Transport.RMQ,
+          options: config.get('rabbitmqOptions')
         }),
         inject: [ConfigService],
       },
@@ -103,10 +125,13 @@ export class AppModule implements
 <% if (usePubSub || useKafka || useRabbitmq) { %>
   constructor(
 <% if (usePubSub) { %>
-    @Inject('PUBSUB_SERVICE') private readonly pubsubService: ClientProxy,
+    @Inject(PUBSUB_SERVICE) private readonly pubsubService: ClientProxy,
 <% } %>
 <% if (useKafka) { %>
-    @Inject('KAFKA_SERVICE') private readonly kafkaService: ClientProxy,
+    @Inject(KAFKA_SERVICE) private readonly kafkaService: ClientProxy,
+<% } %>
+<% if (useRabbitmq) { %>
+    @Inject(RABBITMQ_SERVICE) private readonly rabbitmqService: ClientProxy,
 <% } %>
   ) {}
 
@@ -116,6 +141,9 @@ export class AppModule implements
 <% } %>
 <% if (useKafka) { %>
     await this.kafkaService.connect();
+<% } %>
+<% if (useRabbitmq) { %>
+    await this.rabbitmqService.connect();
 <% } %>
   }
 <% } %>

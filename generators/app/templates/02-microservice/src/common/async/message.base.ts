@@ -41,3 +41,25 @@ export class CreateReplyErrorCommandPayload {
 }
 
 export class CreateReplyErrorCommand<T extends CreateReplyErrorCommandPayload> extends MessageBase<T> {}
+
+export class UpdateCommand<T> extends MessageBase<Partial<T>> {}
+
+export class UpdateReplyCommand extends MessageBase<any> {}
+
+export class UpdateReplySuccessCommandPayload {
+  @ApiProperty({ format: 'uuid' })
+  identifier: string;
+}
+
+export class UpdateReplySuccessCommand extends MessageBase<UpdateReplySuccessCommandPayload> {}
+
+export class UpdateReplyErrorCommandPayload {
+  @ApiProperty()
+  errorCode: string;
+  @ApiProperty()
+  errorMessage: string;
+  @ApiPropertyOptional()
+  errorDetails: any;
+}
+
+export class UpdateReplyErrorCommand<T extends UpdateReplyErrorCommandPayload> extends MessageBase<T> {}

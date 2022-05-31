@@ -177,9 +177,9 @@ module.exports = class extends Generator {
       );
     }
     else if (this.props.answerProjectLib.dbType === 'typeorm') {
-      pkgJson.dependencies['@nestjs/typeorm'] = '^8.0.3';
+      pkgJson.dependencies['@nestjs/typeorm'] = '^8.0.4';
       pkgJson.dependencies['mysql2'] = '^2.3.3';
-      pkgJson.dependencies['typeorm'] = '^0.2.44';
+      pkgJson.dependencies['typeorm'] = '^0.3.6';
 
       this.fs.copyTpl(
        this.templatePath(`${this.props.answerProjectType.projectType}/docker-compose-typeorm.yml`),
@@ -196,7 +196,7 @@ module.exports = class extends Generator {
     }
 
     if (this.props.answerProjectLib.usePubSub.toLowerCase() === 'y') {
-      pkgJson.dependencies['@nestjs/microservices'] = '^8.4.4';
+      pkgJson.dependencies['@nestjs/microservices'] = '^8.4.5';
       pkgJson.dependencies['@algoan/pubsub'] = '^4.6.3';
       pkgJson.dependencies['@algoan/nestjs-google-pubsub-client'] = '^0.4.1';
 
@@ -286,9 +286,10 @@ module.exports = class extends Generator {
     );
 
     // for common module, generate folder structure
-    this.fs.copy(
+    this.fs.copyTpl(
      this.templatePath(`${this.props.answerProjectType.projectType}/src/common/**/*`),
-     this.destinationPath(`${this.props.answerProjectInfo.name}/src/common`)
+     this.destinationPath(`${this.props.answerProjectInfo.name}/src/common`),
+     globalConfig
     )
 
     // Extend or create package.json file in destination path

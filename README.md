@@ -44,7 +44,7 @@ yo nestjs-service:module [module-name]      # require run from root nestjs proje
 ## Check List
 ### Project structure supports
 - [x] standalone app
-- [ ] microservice
+- [x] microservice
 - [ ] hybrid app
 - [ ] clean architect
 

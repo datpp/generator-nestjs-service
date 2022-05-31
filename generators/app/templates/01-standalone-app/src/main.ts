@@ -2,7 +2,8 @@ import { NestFactory } from '@nestjs/core';
 import { AppModule } from './app.module';
 import { ConfigService } from '@nestjs/config';
 import { Logger, RequestMethod } from '@nestjs/common';
-import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
+import { OpenApiDocumentBuilder, OpenApiModule } from '@ivamuno/nestjs-openapi';
+import * as pkgJson from '../package.json';
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
@@ -17,14 +18,20 @@ async function bootstrap() {
     ],
   });
 
-  // for swagger document
-  const swaggerConfig = new DocumentBuilder()
+  // see more at https://github.com/ivamuno/nestjs-openapi
+  const opeanApiOptions = new OpenApiDocumentBuilder()
     .setTitle('<%= appName %>')
     .setDescription('<%= appDescription %>')
-    .setVersion('1.0')
+    .setVersion(pkgJson.version)
+    .addBasicAuth()
+    .addBearerAuth()
+    .addOAuth2()
+    .addApiKey()
+    .addCookieAuth()
+    .addSecurityRequirements('bearer')
     .build();
-  const document = SwaggerModule.createDocument(app, swaggerConfig);
-  SwaggerModule.setup('docs', app, document);
+  const openApidocument = OpenApiModule.createDocument(app, opeanApiOptions);
+  OpenApiModule.setup('openapi', app, openApidocument, {});
 
   await app.listen(appPort);
   Logger.log(`Listening on http://localhost:${appPort}`, 'NestApplication');

@@ -3,10 +3,10 @@ module.exports = [
     name: '01 - Standalone App',
     value: '01-standalone-app'
   },
-  // {
-  //   name: '02 - Micro-Service',
-  //   value: '02-microservice'
-  // },
+  {
+    name: '02 - Micro-Service',
+    value: '02-microservice'
+  },
   // {
   //   name: '03 - Hybrid App',
   //   value: '03-hybrid-app'

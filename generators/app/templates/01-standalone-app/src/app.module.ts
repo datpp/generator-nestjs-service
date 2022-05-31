@@ -1,13 +1,21 @@
 import {
+<% if (usePubSub) { %>
   Inject,
+  OnApplicationBootstrap,
+<% } %>
   MiddlewareConsumer,
   Module,
-  NestModule, OnApplicationBootstrap,
+  NestModule,
 } from '@nestjs/common';
 import configuration from './app.config';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
-import { ConfigModule, ConfigService } from '@nestjs/config';
+import {
+  ConfigModule,
+<% if (usePubSub || useCacheRedis || useTypeORM || useMongoose) { %>
+  ConfigService,
+<% } %>
+} from '@nestjs/config';
 import { AppLoggerMiddleware } from './common/middlewares/applogger';
 <% if (useCacheRedis) { %>
 import { CacheModule } from '@nestjs/common';
@@ -71,7 +79,12 @@ import { GCPubSubClient } from '@algoan/nestjs-google-pubsub-client';
   controllers: [AppController],
   providers: [AppService],
 })
-export class AppModule implements NestModule, OnApplicationBootstrap {
+export class AppModule implements
+  NestModule
+<% if (usePubSub) { %>
+  , OnApplicationBootstrap
+<% } %>
+  {
 <% if (usePubSub) { %>
   constructor(@Inject('PUBSUB_CLIENT') private readonly client: ClientProxy) {}
 

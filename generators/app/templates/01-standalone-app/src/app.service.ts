@@ -16,7 +16,7 @@ export class AppService {
       version: packageInfo.version,
       location: {
         apiPrefix: `/${this.config.get<string>('pathPrefix')}`,
-        docs: '/docs',
+        docs: '/openapi',
         healthCheck: '/health',
       },
     };
